@@ -14,6 +14,7 @@ type MainWindowUi struct {
 	centralwidget  *qt.QWidget
 	verticalLayout *qt.QVBoxLayout
 	playerLayout   *qt.QHBoxLayout
+	addButton      *qt.QPushButton
 	pauseButton    *qt.QPushButton
 	stopButton     *qt.QPushButton
 	previousButton *qt.QPushButton
@@ -48,13 +49,23 @@ func NewMainWindowUi() *MainWindowUi {
 	playerLayout__objectName.Delete() // setter copied value
 	ui.playerLayout.SetContentsMargins(11, 11, 11, 11)
 	ui.playerLayout.SetSpacing(6)
+	ui.addButton = qt.NewQPushButton(ui.centralwidget)
+	addButton__objectName := qt.NewQAnyStringView3("addButton")
+	ui.addButton.SetObjectName(*addButton__objectName)
+	addButton__objectName.Delete() // setter copied value
+	/* miqt-uic: no handler for addButton property 'minimumSize' */
+	icon0 := qt.QIcon_FromTheme("list-add")
+	ui.addButton.SetIcon(icon0)
+	ui.addButton.SetFlat(true)
+
+	ui.playerLayout.AddWidget(ui.addButton.QWidget)
 	ui.pauseButton = qt.NewQPushButton(ui.centralwidget)
 	pauseButton__objectName := qt.NewQAnyStringView3("pauseButton")
 	ui.pauseButton.SetObjectName(*pauseButton__objectName)
 	pauseButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for pauseButton property 'minimumSize' */
-	icon0 := qt.QIcon_FromTheme("media-playback-pause")
-	ui.pauseButton.SetIcon(icon0)
+	icon1 := qt.QIcon_FromTheme("media-playback-pause")
+	ui.pauseButton.SetIcon(icon1)
 	ui.pauseButton.SetFlat(true)
 
 	ui.playerLayout.AddWidget(ui.pauseButton.QWidget)
@@ -63,8 +74,8 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.stopButton.SetObjectName(*stopButton__objectName)
 	stopButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for stopButton property 'minimumSize' */
-	icon1 := qt.QIcon_FromTheme("media-playback-stop")
-	ui.stopButton.SetIcon(icon1)
+	icon2 := qt.QIcon_FromTheme("media-playback-stop")
+	ui.stopButton.SetIcon(icon2)
 	ui.stopButton.SetFlat(true)
 
 	ui.playerLayout.AddWidget(ui.stopButton.QWidget)
@@ -73,8 +84,8 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.previousButton.SetObjectName(*previousButton__objectName)
 	previousButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for previousButton property 'minimumSize' */
-	icon2 := qt.QIcon_FromTheme("media-skip-backward")
-	ui.previousButton.SetIcon(icon2)
+	icon3 := qt.QIcon_FromTheme("media-skip-backward")
+	ui.previousButton.SetIcon(icon3)
 	ui.previousButton.SetCheckable(false)
 	ui.previousButton.SetFlat(true)
 
@@ -84,8 +95,8 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.nextButton.SetObjectName(*nextButton__objectName)
 	nextButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for nextButton property 'minimumSize' */
-	icon3 := qt.QIcon_FromTheme("media-skip-forward")
-	ui.nextButton.SetIcon(icon3)
+	icon4 := qt.QIcon_FromTheme("media-skip-forward")
+	ui.nextButton.SetIcon(icon4)
 	ui.nextButton.SetAutoDefault(false)
 	ui.nextButton.SetDefault(false)
 	ui.nextButton.SetFlat(true)
@@ -127,6 +138,7 @@ func NewMainWindowUi() *MainWindowUi {
 // Retranslate reapplies all text translations.
 func (ui *MainWindowUi) Retranslate() {
 	ui.MainWindow.SetWindowTitle(qt.QCoreApplication_Tr("qmRadio"))
+	ui.addButton.SetText(qt.QWidget_Tr(""))
 	ui.pauseButton.SetText(qt.QWidget_Tr(""))
 	ui.stopButton.SetText(qt.QWidget_Tr(""))
 	ui.previousButton.SetText(qt.QWidget_Tr(""))
