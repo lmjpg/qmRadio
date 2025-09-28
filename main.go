@@ -7,7 +7,7 @@ import (
 	qt "github.com/mappu/miqt/qt6"
 )
 
-func newRadioPopup(window *MainWindowUi) {
+func newRadioPopup() {
 	popup := NewDialogUi()
 	popup.buttonBox.OnAccepted(func() { fmt.Println(popup.nameInput.Text() + ", " + popup.urlInput.Text()) })
 	popup.Dialog.Show()
@@ -30,7 +30,7 @@ func main() {
 	window := NewMainWindowUi()
 	uiFix(window)
 
-	window.addButton.OnClicked(func() { newRadioPopup(window) })
+	window.addButton.OnClicked(newRadioPopup)
 	window.pauseButton.OnClicked(pauseClicked)
 
 	window.MainWindow.Show()
