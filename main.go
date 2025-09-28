@@ -30,6 +30,14 @@ func main() {
 	window := NewMainWindowUi()
 	uiFix(window)
 
+	conf, err := GetConfig()
+	if err != nil {
+		messageBox := qt.NewQMessageBox2()
+		messageBox.SetText("There was an error while loading your saved configuration:\n" + err.Error())
+		messageBox.Show()
+	}
+	fmt.Println(conf)
+
 	window.addButton.OnClicked(newRadioPopup)
 	window.pauseButton.OnClicked(pauseClicked)
 
