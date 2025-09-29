@@ -20,7 +20,7 @@ type MainWindowUi struct {
 	previousButton *qt.QPushButton
 	nextButton     *qt.QPushButton
 	playerSlider   *qt.QSlider
-	RadioList      *qt.QTableView
+	RadioList      *qt.QTableWidget
 	menubar        *qt.QMenuBar
 	statusbar      *qt.QStatusBar
 }
@@ -111,10 +111,16 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.playerLayout.AddWidget(ui.playerSlider.QWidget)
 
 	ui.verticalLayout.AddLayout(ui.playerLayout.QLayout)
-	ui.RadioList = qt.NewQTableView(ui.centralwidget)
+	ui.RadioList = qt.NewQTableWidget(ui.centralwidget)
 	RadioList__objectName := qt.NewQAnyStringView3("RadioList")
 	ui.RadioList.SetObjectName(*RadioList__objectName)
 	RadioList__objectName.Delete() // setter copied value
+	ui.RadioList.SetEditTriggers(qt.QAbstractItemView__NoEditTriggers)
+	ui.RadioList.SetSelectionMode(qt.QAbstractItemView__SingleSelection)
+	ui.RadioList.SetSelectionBehavior(qt.QAbstractItemView__SelectRows)
+	ui.RadioList.SetGridStyle(qt.NoPen)
+	ui.RadioList.SetColumnCount(2)
+	/* miqt-uic: no handler for RadioList attribute 'verticalHeaderVisible' */
 
 	ui.verticalLayout.AddWidget(ui.RadioList.QWidget)
 	ui.MainWindow.SetCentralWidget(ui.centralwidget) // Set central widget
