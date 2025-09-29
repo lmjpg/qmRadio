@@ -19,7 +19,7 @@ ui.go:
 
 popup.go:
 	miqt-uic -Qt6 -InFile ui/popup.ui -OutFile popup.go
-	sed -i
+	sed -i \
 		-e 's/qt.AlignmentFlag__/qt./g' \
 		-e 's/qt.Orientation__Horizontal/qt.Horizontal/g' \
 		-e 's/QDialogButtonBox__StandardButton__/QDialogButtonBox__/g' popup.go
