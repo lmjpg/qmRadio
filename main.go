@@ -9,14 +9,22 @@ import (
 
 func newRadioPopup(window *MainWindowUi, conf *Config) {
 	popup := NewDialogUi()
+
 	popup.buttonBox.OnAccepted(func() {
 		name, url := popup.nameInput.Text(), popup.urlInput.Text()
-		err := AddRadio(conf, name, url)
-		if err != nil {
-			showError("Failed to add radio:\n" + err.Error())
+		if len(name) == 0 {
+			showError("Name cannot be empty.")
+		} else if len(url) == 0 {
+			showError("Url cannot be empty.")
+		} else {
+			err := AddRadio(conf, name, url)
+			if err != nil {
+				showError("Failed to add radio:\n" + err.Error())
+			}
+			updateRadios(window, conf)
 		}
-		updateRadios(window, conf)
 	})
+
 	popup.nameInput.SetFocus()
 	popup.Dialog.Show()
 }
