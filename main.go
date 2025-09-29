@@ -7,9 +7,15 @@ import (
 	qt "github.com/mappu/miqt/qt6"
 )
 
-func newRadioPopup() {
+func newRadioPopup(conf *Config) {
 	popup := NewDialogUi()
-	popup.buttonBox.OnAccepted(func() { fmt.Println(popup.nameInput.Text() + ", " + popup.urlInput.Text()) })
+	popup.buttonBox.OnAccepted(func() {
+		name, url := popup.nameInput.Text(), popup.urlInput.Text()
+		err := AddRadio(conf, name, url)
+		if err != nil {
+			showError("Failed to add radio:\n" + err.Error())
+		}
+	})
 	popup.Dialog.Show()
 }
 
@@ -25,6 +31,13 @@ func uiFix(window *MainWindowUi) {
 	}
 }
 
+func showError(err string) {
+	fmt.Println(err)
+	messageBox := qt.NewQMessageBox2()
+	messageBox.SetText(err)
+	messageBox.Show()
+}
+
 func main() {
 	qt.NewQApplication(os.Args)
 	window := NewMainWindowUi()
@@ -32,13 +45,10 @@ func main() {
 
 	conf, err := GetConfig()
 	if err != nil {
-		messageBox := qt.NewQMessageBox2()
-		messageBox.SetText("There was an error while loading your saved configuration:\n" + err.Error())
-		messageBox.Show()
+		showError("There was an error while loading your saved configuration:\n" + err.Error())
 	}
-	fmt.Println(conf)
 
-	window.addButton.OnClicked(newRadioPopup)
+	window.addButton.OnClicked(func() { newRadioPopup(conf) })
 	window.pauseButton.OnClicked(pauseClicked)
 
 	window.MainWindow.Show()
