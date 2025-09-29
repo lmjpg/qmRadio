@@ -16,6 +16,7 @@ func newRadioPopup(conf *Config) {
 			showError("Failed to add radio:\n" + err.Error())
 		}
 	})
+	popup.nameInput.SetFocus()
 	popup.Dialog.Show()
 }
 
