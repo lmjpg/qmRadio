@@ -33,6 +33,11 @@ func pauseClicked() {
 	fmt.Println("Clicked pause")
 }
 
+func startRadio(radio *Radio, c chan string) {
+	fmt.Println(radio)
+	c <- radio.Url
+}
+
 func updateRadios(window *MainWindowUi, conf *Config) {
 	window.RadioList.SetRowCount(len(conf.Radios))
 	window.RadioList.SetColumnCount(2)
@@ -65,6 +70,10 @@ func main() {
 	window := NewMainWindowUi()
 	uiFix(window)
 
+	c := make(chan string)
+
+	go player(c)
+
 	conf, err := GetConfig()
 	if err != nil {
 		showError("There was an error while loading your saved configuration:\n" + err.Error())
@@ -74,7 +83,7 @@ func main() {
 	window.pauseButton.OnClicked(pauseClicked)
 
 	updateRadios(window, conf)
-	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) { fmt.Println(index.Column(), index.Row()) })
+	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) { startRadio(conf.Radios[index.Row()], c) })
 	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Stretch)
 
 	window.MainWindow.Show()
