@@ -33,24 +33,18 @@ func startAudio(url string) (*beep.Ctrl, error) {
 func player(urlc chan string, pausedc chan bool) {
 	url := ""
 	ctrl := &beep.Ctrl{Streamer: nil, Paused: false}
-	restartStream := false
 	for {
 		select {
 		case url = <-urlc:
-			restartStream = true
-		case paused := <-pausedc:
-			ctrl.Paused = paused
-		default:
-		}
-
-		if restartStream {
 			log.Printf("Playing from %v\n", url)
 			var err error
 			ctrl, err = startAudio(url)
 			if err != nil {
 				log.Println(err)
+				ctrl = &beep.Ctrl{Streamer: nil, Paused: false}
 			}
-			restartStream = false
+		case paused := <-pausedc:
+			ctrl.Paused = paused
 		}
 	}
 }
