@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gopxl/beep"
-	"github.com/gopxl/beep/mp3"
-	"github.com/gopxl/beep/speaker"
+	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/mp3"
+	"github.com/gopxl/beep/v2/speaker"
+	"github.com/gopxl/beep/v2/vorbis"
 )
 
 func startAudio(url string) (*beep.Ctrl, error) {
@@ -16,18 +17,44 @@ func startAudio(url string) (*beep.Ctrl, error) {
 		return nil, err
 	}
 
-	streamer, format, err := mp3.Decode(resp.Body)
+	streamer, format, err := decodeAudio(resp)
 	if err != nil {
 		return nil, err
 	}
-	log.Println(format)
-	log.Println(streamer)
 
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second))
 	ctrl := &beep.Ctrl{Streamer: streamer, Paused: false}
 	speaker.Play(ctrl)
 
 	return ctrl, nil
+}
+
+func decodeAudio(resp *http.Response) (beep.Streamer, *beep.Format, error) {
+	contentTypeHeader, ok := resp.Header["Content-Type"]
+	var contentType string
+	if !ok || len(contentTypeHeader) == 1 {
+		log.Println("No Content-Type header or invalid Content-Type header, assuming mp3.")
+	} else {
+		contentType = contentTypeHeader[0]
+	}
+
+	var streamer beep.Streamer
+	var format beep.Format
+	var err error
+	switch contentType {
+	case "application/ogg", "audio/ogg", "video/ogg":
+		streamer, format, err = vorbis.Decode(resp.Body)
+	case "audio/mpeg":
+		fallthrough
+	default:
+		streamer, format, err = mp3.Decode(resp.Body)
+	}
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return streamer, &format, err
 }
 
 func player(urlc chan string, pausedc chan bool) {
