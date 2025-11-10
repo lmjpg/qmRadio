@@ -82,6 +82,7 @@ func main() {
 
 	window.addButton.OnClicked(func() { newRadioPopup(window, conf) })
 	window.pauseButton.OnClicked(func() { paused = !paused; pausedc <- paused })
+	window.stopButton.OnClicked(func() { paused = true; pausedc <- paused })
 
 	updateRadios(window, conf)
 	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) { paused = false; startRadio(conf.Radios[index.Row()], urlc) })

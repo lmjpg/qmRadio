@@ -65,7 +65,6 @@ func player(urlc chan string, pausedc chan bool) {
 		case url = <-urlc:
 		case paused = <-pausedc:
 			if ctrl != nil {
-				log.Printf("%v\n", ctrl.Streamer.(beep.StreamSeekCloser).Len())
 				if paused {
 					speaker.Suspend()
 				} else {
