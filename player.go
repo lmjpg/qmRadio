@@ -5,49 +5,52 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
 )
 
-func getUrl(c chan string) (string, bool) {
-	for {
-		select {
-		case url := <-c:
-			return url, true
-		default:
-			return "", false
-		}
-	}
-}
-
-func getAudioBuffer(url string) error {
+func startAudio(url string) (*beep.Ctrl, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	streamer, format, err := mp3.Decode(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	log.Println(format)
 	log.Println(streamer)
 
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second))
-	speaker.Play(streamer)
+	ctrl := &beep.Ctrl{Streamer: streamer, Paused: false}
+	speaker.Play(ctrl)
 
-	return nil
+	return ctrl, nil
 }
 
-func player(c chan string) {
+func player(urlc chan string, pausedc chan bool) {
+	url := ""
+	ctrl := &beep.Ctrl{Streamer: nil, Paused: false}
+	restartStream := false
 	for {
-		url, ok := getUrl(c)
-		if ok {
+		select {
+		case url = <-urlc:
+			restartStream = true
+		case paused := <-pausedc:
+			ctrl.Paused = paused
+		default:
+		}
+
+		if restartStream {
 			log.Printf("Playing from %v\n", url)
-			err := getAudioBuffer(url)
+			var err error
+			ctrl, err = startAudio(url)
 			if err != nil {
 				log.Println(err)
 			}
+			restartStream = false
 		}
 	}
 }

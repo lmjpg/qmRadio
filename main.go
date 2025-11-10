@@ -33,8 +33,8 @@ func pauseClicked() {
 	fmt.Println("Clicked pause")
 }
 
-func startRadio(radio *Radio, c chan string) {
-	c <- radio.Url
+func startRadio(radio *Radio, urlc chan string) {
+	urlc <- radio.Url
 }
 
 func updateRadios(window *MainWindowUi, conf *Config) {
@@ -69,8 +69,11 @@ func main() {
 	window := NewMainWindowUi()
 	uiFix(window)
 
-	c := make(chan string)
-	go player(c)
+	paused := false
+
+	pausedc := make(chan bool)
+	urlc := make(chan string)
+	go player(urlc, pausedc)
 
 	conf, err := GetConfig()
 	if err != nil {
@@ -78,10 +81,10 @@ func main() {
 	}
 
 	window.addButton.OnClicked(func() { newRadioPopup(window, conf) })
-	window.pauseButton.OnClicked(pauseClicked)
+	window.pauseButton.OnClicked(func() { paused = !paused; pausedc <- paused })
 
 	updateRadios(window, conf)
-	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) { startRadio(conf.Radios[index.Row()], c) })
+	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) { startRadio(conf.Radios[index.Row()], urlc) })
 	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Stretch)
 
 	window.MainWindow.Show()
