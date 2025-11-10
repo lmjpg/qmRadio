@@ -84,7 +84,7 @@ func main() {
 	window.pauseButton.OnClicked(func() { paused = !paused; pausedc <- paused })
 
 	updateRadios(window, conf)
-	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) { startRadio(conf.Radios[index.Row()], urlc) })
+	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) { paused = false; startRadio(conf.Radios[index.Row()], urlc) })
 	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Stretch)
 
 	window.MainWindow.Show()
