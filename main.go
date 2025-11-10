@@ -34,7 +34,6 @@ func pauseClicked() {
 }
 
 func startRadio(radio *Radio, c chan string) {
-	fmt.Println(radio)
 	c <- radio.Url
 }
 
@@ -71,7 +70,6 @@ func main() {
 	uiFix(window)
 
 	c := make(chan string)
-
 	go player(c)
 
 	conf, err := GetConfig()
