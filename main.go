@@ -70,6 +70,7 @@ func main() {
 	uiFix(window)
 
 	paused := false
+	selected := -1
 
 	pausedc := make(chan bool)
 	urlc := make(chan string)
@@ -83,11 +84,24 @@ func main() {
 	window.addButton.OnClicked(func() { newRadioPopup(window, conf) })
 	window.pauseButton.OnClicked(func() { paused = !paused; pausedc <- paused })
 	window.stopButton.OnClicked(func() { paused = true; pausedc <- paused })
+	window.nextButton.OnClicked(func() { selected = (selected + 1) % len(conf.Radios); startRadio(conf.Radios[selected], urlc) })
+	window.previousButton.OnClicked(func() {
+		if selected == -1 {
+			selected = 0
+		} else {
+			selected = (selected + len(conf.Radios) - 1) % len(conf.Radios)
+		}
+		startRadio(conf.Radios[selected], urlc)
+	})
 
 	updateRadios(window, conf)
-	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) { paused = false; startRadio(conf.Radios[index.Row()], urlc) })
-	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Stretch)
+	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) {
+		paused = false
+		selected = index.Row()
+		startRadio(conf.Radios[selected], urlc)
+	})
 
+	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Stretch)
 	window.MainWindow.Show()
 	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Interactive)
 	qt.QApplication_Exec()

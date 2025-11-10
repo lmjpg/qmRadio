@@ -77,6 +77,8 @@ func player(urlc chan string, pausedc chan bool) {
 			if ctrl != nil {
 				ctrl.Streamer.(beep.StreamSeekCloser).Close()
 			}
+
+			log.Printf("Now playing %v\n", url)
 			var err error
 			ctrl, err = startAudio(url)
 			if err != nil {
