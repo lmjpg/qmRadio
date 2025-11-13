@@ -70,7 +70,8 @@ func main() {
 
 	pausedc := make(chan bool)
 	urlc := make(chan string)
-	go player(urlc, pausedc)
+	stopc := make(chan int)
+	go player(urlc, pausedc, stopc)
 
 	conf, err := GetConfig()
 	if err != nil {
@@ -79,7 +80,7 @@ func main() {
 
 	window.addButton.OnClicked(func() { newRadioPopup(window, conf) })
 	window.pauseButton.OnClicked(func() { paused = !paused; pausedc <- paused })
-	window.stopButton.OnClicked(func() { paused = true; pausedc <- paused })
+	window.stopButton.OnClicked(func() { stopc <- 1 })
 	window.nextButton.OnClicked(func() { selected = (selected + 1) % len(conf.Radios); startRadio(conf.Radios[selected], urlc) })
 	window.previousButton.OnClicked(func() {
 		if selected == -1 {

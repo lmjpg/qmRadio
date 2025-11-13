@@ -57,27 +57,40 @@ func decodeAudio(resp *http.Response) (beep.Streamer, *beep.Format, error) {
 	return streamer, &format, err
 }
 
-func player(urlc chan string, pausedc chan bool) {
+func startStream(url string) *effects.Volume {
+	log.Printf("Now playing %v\n", url)
+	streamer, err := startAudio(url)
+	if err != nil {
+		log.Println(err)
+	}
+	return streamer
+}
+
+func stopStream(streamer *effects.Volume) {
+	if streamer != nil {
+		streamer.Streamer.(beep.StreamSeekCloser).Close()
+	}
+}
+
+func player(urlc chan string, pausedc chan bool, stopc chan int) {
 	var url string
 	var streamer *effects.Volume
 	paused := false
 	for {
 		select {
 		case url = <-urlc:
-			if streamer != nil {
-				streamer.Streamer.(beep.StreamSeekCloser).Close()
-			}
+			stopStream(streamer)
+			streamer = startStream(url)
 
-			log.Printf("Now playing %v\n", url)
-			var err error
-			streamer, err = startAudio(url)
-			if err != nil {
-				log.Println(err)
-			}
 		case paused = <-pausedc:
 			if streamer != nil {
 				streamer.Silent = paused
+			} else if !paused {
+				streamer = startStream(url)
 			}
+
+		case <-stopc:
+			stopStream(streamer)
 		}
 	}
 }
