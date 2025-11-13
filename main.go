@@ -29,10 +29,6 @@ func newRadioPopup(window *MainWindowUi, conf *Config) {
 	popup.Dialog.Show()
 }
 
-func pauseClicked() {
-	fmt.Println("Clicked pause")
-}
-
 func startRadio(radio *Radio, urlc chan string) {
 	urlc <- radio.Url
 }

@@ -5,12 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/effects"
 	"github.com/gopxl/beep/v2/mp3"
 	"github.com/gopxl/beep/v2/speaker"
 	"github.com/gopxl/beep/v2/vorbis"
 )
 
-func startAudio(url string) (*beep.Ctrl, error) {
+func startAudio(url string) (*effects.Volume, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -22,10 +23,10 @@ func startAudio(url string) (*beep.Ctrl, error) {
 	}
 
 	speaker.Init(format.SampleRate, 0)
-	ctrl := &beep.Ctrl{Streamer: streamer, Paused: false}
-	speaker.Play(ctrl)
+	volume := &effects.Volume{Streamer: streamer, Base: 2, Volume: 0, Silent: false}
+	speaker.Play(volume)
 
-	return ctrl, nil
+	return volume, nil
 }
 
 func decodeAudio(resp *http.Response) (beep.Streamer, *beep.Format, error) {
@@ -58,31 +59,24 @@ func decodeAudio(resp *http.Response) (beep.Streamer, *beep.Format, error) {
 
 func player(urlc chan string, pausedc chan bool) {
 	var url string
-	var ctrl *beep.Ctrl
+	var streamer *effects.Volume
 	paused := false
 	for {
 		select {
 		case url = <-urlc:
-		case paused = <-pausedc:
-			if ctrl != nil {
-				if paused {
-					speaker.Suspend()
-				} else {
-					speaker.Resume()
-				}
-			}
-		}
-
-		if !paused {
-			if ctrl != nil {
-				ctrl.Streamer.(beep.StreamSeekCloser).Close()
+			if streamer != nil {
+				streamer.Streamer.(beep.StreamSeekCloser).Close()
 			}
 
 			log.Printf("Now playing %v\n", url)
 			var err error
-			ctrl, err = startAudio(url)
+			streamer, err = startAudio(url)
 			if err != nil {
 				log.Println(err)
+			}
+		case paused = <-pausedc:
+			if streamer != nil {
+				streamer.Silent = paused
 			}
 		}
 	}
