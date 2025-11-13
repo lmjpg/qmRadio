@@ -53,6 +53,17 @@ func uiFix(window *MainWindowUi) {
 	window.RadioList.SetHorizontalHeaderLabels([]string{"Name", "Url"})
 }
 
+func setPauseButton(button *qt.QPushButton, paused bool) {
+	var iconName string
+	if paused {
+		iconName = "media-playback-start"
+	} else {
+		iconName = "media-playback-pause"
+	}
+	icon := qt.QIcon_FromTheme(iconName)
+	button.SetIcon(icon)
+}
+
 func showError(err string) {
 	fmt.Println(err)
 	messageBox := qt.NewQMessageBox2()
@@ -79,7 +90,7 @@ func main() {
 	}
 
 	window.addButton.OnClicked(func() { newRadioPopup(window, conf) })
-	window.pauseButton.OnClicked(func() { paused = !paused; pausedc <- paused })
+	window.pauseButton.OnClicked(func() { paused = !paused; pausedc <- paused; setPauseButton(window.pauseButton, paused) })
 	window.stopButton.OnClicked(func() { stopc <- 1 })
 	window.nextButton.OnClicked(func() { selected = (selected + 1) % len(conf.Radios); startRadio(conf.Radios[selected], urlc) })
 	window.previousButton.OnClicked(func() {
