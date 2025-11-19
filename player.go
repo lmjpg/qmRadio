@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gopxl/beep/v2"
 	"github.com/gopxl/beep/v2/effects"
@@ -12,7 +13,14 @@ import (
 )
 
 func startAudio(url string) (*effects.Volume, error) {
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Icy-Metadata", "1")
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -38,16 +46,27 @@ func decodeAudio(resp *http.Response) (beep.Streamer, *beep.Format, error) {
 		contentType = contentTypeHeader[0]
 	}
 
+	icyMetaIntStr, isIcy := resp.Header["Icy-Metaint"]
+	var icyMetaInt int
+	if isIcy {
+		var err error
+		icyMetaInt, err = strconv.Atoi(icyMetaIntStr[0])
+		if err != nil {
+			icyMetaInt = 0
+			isIcy = false
+		}
+	}
+
 	var streamer beep.Streamer
 	var format beep.Format
 	var err error
 	switch contentType {
 	case "application/ogg", "audio/ogg", "video/ogg":
-		streamer, format, err = vorbis.Decode(resp.Body)
+		streamer, format, err = vorbis.Decode(MakeHttpStream(resp.Body, isIcy, icyMetaInt))
 	case "audio/mpeg":
 		fallthrough
 	default:
-		streamer, format, err = mp3.Decode(resp.Body)
+		streamer, format, err = mp3.Decode(MakeHttpStream(resp.Body, isIcy, icyMetaInt))
 	}
 
 	if err != nil {
