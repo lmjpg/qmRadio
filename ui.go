@@ -19,7 +19,8 @@ type MainWindowUi struct {
 	stopButton     *qt.QPushButton
 	previousButton *qt.QPushButton
 	nextButton     *qt.QPushButton
-	playerSlider   *qt.QSlider
+	playerInfoBox  *qt.QVBoxLayout
+	playerInfo     *qt.QLabel
 	RadioList      *qt.QTableWidget
 	menubar        *qt.QMenuBar
 	statusbar      *qt.QStatusBar
@@ -54,6 +55,7 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.addButton.SetObjectName(*addButton__objectName)
 	addButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for addButton property 'minimumSize' */
+	/* miqt-uic: no handler for addButton property 'maximumSize' */
 	icon0 := qt.QIcon_FromTheme("list-add")
 	ui.addButton.SetIcon(icon0)
 	ui.addButton.SetFlat(true)
@@ -64,6 +66,7 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.pauseButton.SetObjectName(*pauseButton__objectName)
 	pauseButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for pauseButton property 'minimumSize' */
+	/* miqt-uic: no handler for pauseButton property 'maximumSize' */
 	icon1 := qt.QIcon_FromTheme("media-playback-pause")
 	ui.pauseButton.SetIcon(icon1)
 	ui.pauseButton.SetFlat(true)
@@ -74,6 +77,7 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.stopButton.SetObjectName(*stopButton__objectName)
 	stopButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for stopButton property 'minimumSize' */
+	/* miqt-uic: no handler for stopButton property 'maximumSize' */
 	icon2 := qt.QIcon_FromTheme("media-playback-stop")
 	ui.stopButton.SetIcon(icon2)
 	ui.stopButton.SetFlat(true)
@@ -84,6 +88,7 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.previousButton.SetObjectName(*previousButton__objectName)
 	previousButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for previousButton property 'minimumSize' */
+	/* miqt-uic: no handler for previousButton property 'maximumSize' */
 	icon3 := qt.QIcon_FromTheme("media-skip-backward")
 	ui.previousButton.SetIcon(icon3)
 	ui.previousButton.SetCheckable(false)
@@ -95,6 +100,7 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.nextButton.SetObjectName(*nextButton__objectName)
 	nextButton__objectName.Delete() // setter copied value
 	/* miqt-uic: no handler for nextButton property 'minimumSize' */
+	/* miqt-uic: no handler for nextButton property 'maximumSize' */
 	icon4 := qt.QIcon_FromTheme("media-skip-forward")
 	ui.nextButton.SetIcon(icon4)
 	ui.nextButton.SetAutoDefault(false)
@@ -102,13 +108,21 @@ func NewMainWindowUi() *MainWindowUi {
 	ui.nextButton.SetFlat(true)
 
 	ui.playerLayout.AddWidget(ui.nextButton.QWidget)
-	ui.playerSlider = qt.NewQSlider(ui.centralwidget)
-	playerSlider__objectName := qt.NewQAnyStringView3("playerSlider")
-	ui.playerSlider.SetObjectName(*playerSlider__objectName)
-	playerSlider__objectName.Delete() // setter copied value
-	ui.playerSlider.SetOrientation(qt.Horizontal)
+	ui.playerInfoBox = qt.NewQVBoxLayout2()
+	playerInfoBox__objectName := qt.NewQAnyStringView3("playerInfoBox")
+	ui.playerInfoBox.SetObjectName(*playerInfoBox__objectName)
+	playerInfoBox__objectName.Delete() // setter copied value
+	ui.playerInfoBox.SetContentsMargins(11, 11, 11, 11)
+	ui.playerInfoBox.SetSpacing(6)
+	ui.playerInfo = qt.NewQLabel(ui.centralwidget)
+	playerInfo__objectName := qt.NewQAnyStringView3("playerInfo")
+	ui.playerInfo.SetObjectName(*playerInfo__objectName)
+	playerInfo__objectName.Delete() // setter copied value
+	/* miqt-uic: no handler for playerInfo property 'font' */
 
-	ui.playerLayout.AddWidget(ui.playerSlider.QWidget)
+	ui.playerInfoBox.AddWidget(ui.playerInfo.QWidget)
+
+	ui.playerLayout.AddLayout(ui.playerInfoBox.QLayout)
 
 	ui.verticalLayout.AddLayout(ui.playerLayout.QLayout)
 	ui.RadioList = qt.NewQTableWidget(ui.centralwidget)
@@ -128,7 +142,7 @@ func NewMainWindowUi() *MainWindowUi {
 	menubar__objectName := qt.NewQAnyStringView3("menubar")
 	ui.menubar.SetObjectName(*menubar__objectName)
 	menubar__objectName.Delete() // setter copied value
-	ui.menubar.Resize(815, 23)
+	ui.menubar.Resize(815, 30)
 	ui.MainWindow.SetMenuBar(ui.menubar)
 	ui.statusbar = qt.NewQStatusBar(ui.MainWindow.QWidget)
 	statusbar__objectName := qt.NewQAnyStringView3("statusbar")
@@ -149,4 +163,5 @@ func (ui *MainWindowUi) Retranslate() {
 	ui.stopButton.SetText(qt.QWidget_Tr(""))
 	ui.previousButton.SetText(qt.QWidget_Tr(""))
 	ui.nextButton.SetText(qt.QWidget_Tr(""))
+	ui.playerInfo.SetText(qt.QWidget_Tr("Nothing Playing"))
 }

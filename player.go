@@ -12,7 +12,9 @@ import (
 	"github.com/gopxl/beep/v2/vorbis"
 )
 
-func startAudio(url string) (*effects.Volume, error) {
+type setText func(string)
+
+func startAudio(url string, setPlayerText setText) (*effects.Volume, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -25,7 +27,7 @@ func startAudio(url string) (*effects.Volume, error) {
 		return nil, err
 	}
 
-	streamer, format, err := decodeAudio(resp)
+	streamer, format, err := decodeAudio(resp, setPlayerText)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +39,7 @@ func startAudio(url string) (*effects.Volume, error) {
 	return volume, nil
 }
 
-func decodeAudio(resp *http.Response) (beep.Streamer, *beep.Format, error) {
+func decodeAudio(resp *http.Response, setPlayerText setText) (beep.Streamer, *beep.Format, error) {
 	contentTypeHeader, ok := resp.Header["Content-Type"]
 	var contentType string
 	if !ok || len(contentTypeHeader) < 1 {
@@ -62,11 +64,11 @@ func decodeAudio(resp *http.Response) (beep.Streamer, *beep.Format, error) {
 	var err error
 	switch contentType {
 	case "application/ogg", "audio/ogg", "video/ogg":
-		streamer, format, err = vorbis.Decode(MakeHttpStream(resp.Body, isIcy, icyMetaInt))
+		streamer, format, err = vorbis.Decode(MakeHttpStream(resp.Body, isIcy, icyMetaInt, setPlayerText))
 	case "audio/mpeg":
 		fallthrough
 	default:
-		streamer, format, err = mp3.Decode(MakeHttpStream(resp.Body, isIcy, icyMetaInt))
+		streamer, format, err = mp3.Decode(MakeHttpStream(resp.Body, isIcy, icyMetaInt, setPlayerText))
 	}
 
 	if err != nil {
@@ -76,9 +78,9 @@ func decodeAudio(resp *http.Response) (beep.Streamer, *beep.Format, error) {
 	return streamer, &format, err
 }
 
-func startStream(url string) *effects.Volume {
-	log.Printf("Now playing %v\n", url)
-	streamer, err := startAudio(url)
+func startStream(url string, setPlayerText setText) *effects.Volume {
+	log.Printf("Playing from %v\n", url)
+	streamer, err := startAudio(url, setPlayerText)
 	if err != nil {
 		log.Println(err)
 	}
@@ -91,7 +93,7 @@ func stopStream(streamer *effects.Volume) {
 	}
 }
 
-func player(urlc chan string, pausedc chan bool, stopc chan int) {
+func player(urlc chan string, pausedc chan bool, stopc chan int, setPlayerText setText) {
 	var url string
 	var streamer *effects.Volume
 	paused := false
@@ -99,13 +101,13 @@ func player(urlc chan string, pausedc chan bool, stopc chan int) {
 		select {
 		case url = <-urlc:
 			stopStream(streamer)
-			streamer = startStream(url)
+			streamer = startStream(url, setPlayerText)
 
 		case paused = <-pausedc:
 			if streamer != nil {
 				streamer.Silent = paused
 			} else if !paused {
-				streamer = startStream(url)
+				streamer = startStream(url, setPlayerText)
 			}
 
 		case <-stopc:

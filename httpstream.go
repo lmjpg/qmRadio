@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"log"
+	"regexp"
 	"strings"
 )
 
@@ -11,11 +12,14 @@ type HttpStream struct {
 	Reader     io.ReadCloser
 	IsIcy      bool
 	IcyMetaInt int
+	SetText    setText
+	Pattern    *regexp.Regexp
 	Seen       int
 }
 
-func MakeHttpStream(body io.ReadCloser, isIcy bool, icyMetaInt int) *HttpStream {
-	return &HttpStream{Reader: body, IsIcy: isIcy, IcyMetaInt: icyMetaInt, Seen: 0}
+func MakeHttpStream(body io.ReadCloser, isIcy bool, icyMetaInt int, setPlayerText setText) *HttpStream {
+	metaPattern, _ := regexp.Compile(`(\w+)='(.*?)';`)
+	return &HttpStream{Reader: body, IsIcy: isIcy, IcyMetaInt: icyMetaInt, SetText: setPlayerText, Pattern: metaPattern, Seen: 0}
 }
 
 func (r *HttpStream) Read(p []byte) (n int, e error) {
@@ -38,7 +42,7 @@ func (r *HttpStream) Read(p []byte) (n int, e error) {
 				}
 
 				if len(meta) > 0 {
-					log.Println(string(meta))
+					r.ParseMetadata(string(meta))
 				}
 
 				// remove the metadata section from p
@@ -57,4 +61,15 @@ func (r *HttpStream) Read(p []byte) (n int, e error) {
 func (r *HttpStream) Close() error {
 	// make this update paused in main.go at some point
 	return r.Reader.Close()
+}
+
+func (r *HttpStream) ParseMetadata(metadata string) {
+	data := r.Pattern.FindAllStringSubmatch(metadata, -1)
+	for i := 0; i < len(data); i++ {
+		if data[i][1] == "StreamTitle" {
+			streamTitle := data[i][2]
+			r.SetText(streamTitle)
+			log.Printf("Now playing %v\n", streamTitle)
+		}
+	}
 }

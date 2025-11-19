@@ -42,15 +42,25 @@ func updateRadios(window *MainWindowUi, conf *Config) {
 	}
 }
 
+func setPlayerText(window *MainWindowUi, text string) {
+	window.playerInfo.SetText(text)
+	window.MainWindow.SetWindowTitle(text + " - " + qt.QCoreApplication_Tr("qmRadio"))
+}
+
 func uiFix(window *MainWindowUi) {
 	// Apply properties that miqt-uic cannot handle
 	buttons := []*qt.QPushButton{window.addButton, window.pauseButton, window.stopButton, window.previousButton, window.nextButton}
 	for _, button := range buttons {
 		button.SetMinimumSize2(32, 32)
+		button.SetMaximumSize2(32, 32)
 	}
 
 	window.RadioList.VerticalHeader().SetVisible(false)
 	window.RadioList.SetHorizontalHeaderLabels([]string{"Name", "Url"})
+
+	font := qt.NewQFont6("Sans", 10)
+	font.SetBold(true)
+	window.playerInfo.SetFont(font)
 }
 
 func setPauseButton(button *qt.QPushButton, paused bool) {
@@ -82,7 +92,7 @@ func main() {
 	pausedc := make(chan bool)
 	urlc := make(chan string)
 	stopc := make(chan int)
-	go player(urlc, pausedc, stopc)
+	go player(urlc, pausedc, stopc, func(text string) { setPlayerText(window, text) })
 
 	conf, err := GetConfig()
 	if err != nil {
