@@ -37,8 +37,6 @@ func main() {
 
 	controller := NewController(window)
 
-	go player(controller)
-
 	window.addButton.OnClicked(controller.newRadioPopup)
 	window.pauseButton.OnClicked(controller.togglePause)
 	window.stopButton.OnClicked(controller.stop)

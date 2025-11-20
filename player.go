@@ -91,26 +91,3 @@ func stopStream(streamer *effects.Volume) {
 		streamer.Streamer.(beep.StreamSeekCloser).Close()
 	}
 }
-
-func player(controller *Controller) {
-	var url string
-	var streamer *effects.Volume
-	paused := false
-	for {
-		select {
-		case url = <-controller.Urlc:
-			stopStream(streamer)
-			streamer = startStream(controller, url)
-
-		case paused = <-controller.Pausedc:
-			if streamer != nil {
-				streamer.Silent = paused
-			} else if !paused {
-				streamer = startStream(controller, url)
-			}
-
-		case <-controller.Stopc:
-			stopStream(streamer)
-		}
-	}
-}

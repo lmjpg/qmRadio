@@ -1,6 +1,9 @@
 package main
 
-import qt "github.com/mappu/miqt/qt6"
+import (
+	"github.com/gopxl/beep/v2/effects"
+	qt "github.com/mappu/miqt/qt6"
+)
 
 type Controller struct {
 	Window      *MainWindowUi
@@ -8,9 +11,8 @@ type Controller struct {
 	PauseButton *qt.QPushButton
 	Paused      bool
 	Selected    int
-	Pausedc     chan bool
-	Stopc       chan int
-	Urlc        chan string
+	Streamer    *effects.Volume
+	Url         string
 }
 
 func NewController(window *MainWindowUi) *Controller {
@@ -24,9 +26,8 @@ func NewController(window *MainWindowUi) *Controller {
 		PauseButton: window.pauseButton,
 		Paused:      false,
 		Selected:    0,
-		Pausedc:     make(chan bool),
-		Stopc:       make(chan int),
-		Urlc:        make(chan string),
+		Streamer:    nil,
+		Url:         "",
 	}
 }
 
@@ -54,7 +55,10 @@ func (c *Controller) newRadioPopup() {
 
 func (c *Controller) startRadio() {
 	radio := c.Conf.Radios[c.Selected]
-	c.Urlc <- radio.Url
+	c.Url = radio.Url
+
+	stopStream(c.Streamer)
+	c.Streamer = startStream(c, c.Url)
 }
 
 func (c *Controller) updateRadios() {
@@ -73,7 +77,6 @@ func (c *Controller) setPlayerText(text string) {
 
 func (c *Controller) setPause(paused bool) {
 	c.Paused = paused
-	c.Pausedc <- paused
 
 	var iconName string
 	if paused {
@@ -83,6 +86,12 @@ func (c *Controller) setPause(paused bool) {
 	}
 	icon := qt.QIcon_FromTheme(iconName)
 	c.Window.pauseButton.SetIcon(icon)
+
+	if c.Streamer != nil {
+		c.Streamer.Silent = paused
+	} else if !paused {
+		c.Streamer = startStream(c, c.Url)
+	}
 }
 
 func (c *Controller) togglePause() {
@@ -90,7 +99,7 @@ func (c *Controller) togglePause() {
 }
 
 func (c *Controller) stop() {
-	c.Stopc <- 1
+	stopStream(c.Streamer)
 }
 
 func (c *Controller) changeSelection(diff int) {
