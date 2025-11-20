@@ -10,16 +10,16 @@ import (
 // Gets icecast metadata from an audio stream if present.
 type HttpStream struct {
 	Reader     io.ReadCloser
+	Controller *Controller
 	IsIcy      bool
 	IcyMetaInt int
-	SetText    setText
 	Pattern    *regexp.Regexp
 	Seen       int
 }
 
-func MakeHttpStream(body io.ReadCloser, isIcy bool, icyMetaInt int, setPlayerText setText) *HttpStream {
+func MakeHttpStream(body io.ReadCloser, controller *Controller, isIcy bool, icyMetaInt int) *HttpStream {
 	metaPattern, _ := regexp.Compile(`(\w+)='(.*?)';`)
-	return &HttpStream{Reader: body, IsIcy: isIcy, IcyMetaInt: icyMetaInt, SetText: setPlayerText, Pattern: metaPattern, Seen: 0}
+	return &HttpStream{Reader: body, Controller: controller, IsIcy: isIcy, IcyMetaInt: icyMetaInt, Pattern: metaPattern, Seen: 0}
 }
 
 func (r *HttpStream) Read(p []byte) (n int, e error) {
@@ -68,7 +68,7 @@ func (r *HttpStream) ParseMetadata(metadata string) {
 	for i := 0; i < len(data); i++ {
 		if data[i][1] == "StreamTitle" {
 			streamTitle := data[i][2]
-			r.SetText(streamTitle)
+			r.Controller.setPlayerText(streamTitle)
 			log.Printf("Now playing %v\n", streamTitle)
 		}
 	}

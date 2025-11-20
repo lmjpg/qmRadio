@@ -12,9 +12,7 @@ import (
 	"github.com/gopxl/beep/v2/vorbis"
 )
 
-type setText func(string)
-
-func startAudio(url string, setPlayerText setText) (*effects.Volume, error) {
+func startAudio(controller *Controller, url string) (*effects.Volume, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -27,7 +25,7 @@ func startAudio(url string, setPlayerText setText) (*effects.Volume, error) {
 		return nil, err
 	}
 
-	streamer, format, err := decodeAudio(resp, setPlayerText)
+	streamer, format, err := decodeAudio(controller, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +37,7 @@ func startAudio(url string, setPlayerText setText) (*effects.Volume, error) {
 	return volume, nil
 }
 
-func decodeAudio(resp *http.Response, setPlayerText setText) (beep.Streamer, *beep.Format, error) {
+func decodeAudio(controller *Controller, resp *http.Response) (beep.Streamer, *beep.Format, error) {
 	contentTypeHeader, ok := resp.Header["Content-Type"]
 	var contentType string
 	if !ok || len(contentTypeHeader) < 1 {
@@ -62,13 +60,14 @@ func decodeAudio(resp *http.Response, setPlayerText setText) (beep.Streamer, *be
 	var streamer beep.Streamer
 	var format beep.Format
 	var err error
+	httpstream := MakeHttpStream(resp.Body, controller, isIcy, icyMetaInt)
 	switch contentType {
 	case "application/ogg", "audio/ogg", "video/ogg":
-		streamer, format, err = vorbis.Decode(MakeHttpStream(resp.Body, isIcy, icyMetaInt, setPlayerText))
+		streamer, format, err = vorbis.Decode(httpstream)
 	case "audio/mpeg":
 		fallthrough
 	default:
-		streamer, format, err = mp3.Decode(MakeHttpStream(resp.Body, isIcy, icyMetaInt, setPlayerText))
+		streamer, format, err = mp3.Decode(httpstream)
 	}
 
 	if err != nil {
@@ -78,9 +77,9 @@ func decodeAudio(resp *http.Response, setPlayerText setText) (beep.Streamer, *be
 	return streamer, &format, err
 }
 
-func startStream(url string, setPlayerText setText) *effects.Volume {
+func startStream(controller *Controller, url string) *effects.Volume {
 	log.Printf("Playing from %v\n", url)
-	streamer, err := startAudio(url, setPlayerText)
+	streamer, err := startAudio(controller, url)
 	if err != nil {
 		log.Println(err)
 	}
@@ -93,24 +92,24 @@ func stopStream(streamer *effects.Volume) {
 	}
 }
 
-func player(urlc chan string, pausedc chan bool, stopc chan int, setPlayerText setText) {
+func player(controller *Controller) {
 	var url string
 	var streamer *effects.Volume
 	paused := false
 	for {
 		select {
-		case url = <-urlc:
+		case url = <-controller.Urlc:
 			stopStream(streamer)
-			streamer = startStream(url, setPlayerText)
+			streamer = startStream(controller, url)
 
-		case paused = <-pausedc:
+		case paused = <-controller.Pausedc:
 			if streamer != nil {
 				streamer.Silent = paused
 			} else if !paused {
-				streamer = startStream(url, setPlayerText)
+				streamer = startStream(controller, url)
 			}
 
-		case <-stopc:
+		case <-controller.Stopc:
 			stopStream(streamer)
 		}
 	}

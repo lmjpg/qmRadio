@@ -7,46 +7,6 @@ import (
 	qt "github.com/mappu/miqt/qt6"
 )
 
-func newRadioPopup(window *MainWindowUi, conf *Config) {
-	popup := NewDialogUi()
-
-	popup.buttonBox.OnAccepted(func() {
-		name, url := popup.nameInput.Text(), popup.urlInput.Text()
-		if len(name) == 0 {
-			showError("Name cannot be empty.")
-		} else if len(url) == 0 {
-			showError("Url cannot be empty.")
-		} else {
-			err := AddRadio(conf, name, url)
-			if err != nil {
-				showError("Failed to add radio:\n" + err.Error())
-			}
-			updateRadios(window, conf)
-		}
-	})
-
-	popup.nameInput.SetFocus()
-	popup.Dialog.Show()
-}
-
-func startRadio(radio *Radio, urlc chan string) {
-	urlc <- radio.Url
-}
-
-func updateRadios(window *MainWindowUi, conf *Config) {
-	window.RadioList.SetRowCount(len(conf.Radios))
-	window.RadioList.SetColumnCount(2)
-	for i, radio := range conf.Radios {
-		window.RadioList.SetItem(i, 0, qt.NewQTableWidgetItem2(radio.Name))
-		window.RadioList.SetItem(i, 1, qt.NewQTableWidgetItem2(radio.Url))
-	}
-}
-
-func setPlayerText(window *MainWindowUi, text string) {
-	window.playerInfo.SetText(text)
-	window.MainWindow.SetWindowTitle(text + " - " + qt.QCoreApplication_Tr("qmRadio"))
-}
-
 func uiFix(window *MainWindowUi) {
 	// Apply properties that miqt-uic cannot handle
 	buttons := []*qt.QPushButton{window.addButton, window.pauseButton, window.stopButton, window.previousButton, window.nextButton}
@@ -63,17 +23,6 @@ func uiFix(window *MainWindowUi) {
 	window.playerInfo.SetFont(font)
 }
 
-func setPauseButton(button *qt.QPushButton, paused bool) {
-	var iconName string
-	if paused {
-		iconName = "media-playback-start"
-	} else {
-		iconName = "media-playback-pause"
-	}
-	icon := qt.QIcon_FromTheme(iconName)
-	button.SetIcon(icon)
-}
-
 func showError(err string) {
 	fmt.Println(err)
 	messageBox := qt.NewQMessageBox2()
@@ -86,38 +35,18 @@ func main() {
 	window := NewMainWindowUi()
 	uiFix(window)
 
-	paused := false
-	selected := -1
+	controller := NewController(window)
 
-	pausedc := make(chan bool)
-	urlc := make(chan string)
-	stopc := make(chan int)
-	go player(urlc, pausedc, stopc, func(text string) { setPlayerText(window, text) })
+	go player(controller)
 
-	conf, err := GetConfig()
-	if err != nil {
-		showError("There was an error while loading your saved configuration:\n" + err.Error())
-	}
+	window.addButton.OnClicked(controller.newRadioPopup)
+	window.pauseButton.OnClicked(controller.togglePause)
+	window.stopButton.OnClicked(controller.stop)
+	window.nextButton.OnClicked(controller.selectNext)
+	window.previousButton.OnClicked(controller.selectPrevious)
 
-	window.addButton.OnClicked(func() { newRadioPopup(window, conf) })
-	window.pauseButton.OnClicked(func() { paused = !paused; pausedc <- paused; setPauseButton(window.pauseButton, paused) })
-	window.stopButton.OnClicked(func() { stopc <- 1 })
-	window.nextButton.OnClicked(func() { selected = (selected + 1) % len(conf.Radios); startRadio(conf.Radios[selected], urlc) })
-	window.previousButton.OnClicked(func() {
-		if selected == -1 {
-			selected = 0
-		} else {
-			selected = (selected + len(conf.Radios) - 1) % len(conf.Radios)
-		}
-		startRadio(conf.Radios[selected], urlc)
-	})
-
-	updateRadios(window, conf)
-	window.RadioList.OnDoubleClicked(func(index *qt.QModelIndex) {
-		paused = false
-		selected = index.Row()
-		startRadio(conf.Radios[selected], urlc)
-	})
+	controller.updateRadios()
+	window.RadioList.OnDoubleClicked(controller.clickRadio)
 
 	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Stretch)
 	window.MainWindow.Show()
