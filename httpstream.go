@@ -24,7 +24,7 @@ func MakeHttpStream(body io.ReadCloser, isIcy bool, icyMetaInt int, setPlayerTex
 
 func (r *HttpStream) Read(p []byte) (n int, e error) {
 	n, err := r.Reader.Read(p)
-	if err != nil {
+	if err != nil || !r.IsIcy {
 		return n, err
 	}
 
