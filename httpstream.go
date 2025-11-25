@@ -17,9 +17,15 @@ type HttpStream struct {
 	Seen       int
 }
 
-func MakeHttpStream(body io.ReadCloser, controller *Controller, isIcy bool, icyMetaInt int) *HttpStream {
+func MakeHttpStream(r io.Reader, controller *Controller, isIcy bool, icyMetaInt int) *HttpStream {
 	metaPattern, _ := regexp.Compile(`(\w+)='(.*?)';`)
-	return &HttpStream{Reader: body, Controller: controller, IsIcy: isIcy, IcyMetaInt: icyMetaInt, Pattern: metaPattern, Seen: 0}
+
+	rc, ok := r.(io.ReadCloser)
+	if !ok {
+		rc = io.NopCloser(r)
+	}
+
+	return &HttpStream{Reader: rc, Controller: controller, IsIcy: isIcy, IcyMetaInt: icyMetaInt, Pattern: metaPattern, Seen: 0}
 }
 
 func (r *HttpStream) Read(p []byte) (n int, e error) {
