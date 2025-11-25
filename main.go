@@ -46,6 +46,8 @@ func main() {
 	controller.updateRadios()
 	window.RadioList.OnDoubleClicked(controller.clickRadio)
 
+	controller.setPause(true)
+
 	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Stretch)
 	window.MainWindow.Show()
 	window.RadioList.HorizontalHeader().SetSectionResizeMode(qt.QHeaderView__Interactive)

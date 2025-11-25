@@ -65,7 +65,6 @@ func (r *HttpStream) Read(p []byte) (n int, e error) {
 }
 
 func (r *HttpStream) Close() error {
-	// make this update paused in main.go at some point
 	return r.Reader.Close()
 }
 

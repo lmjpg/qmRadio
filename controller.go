@@ -99,7 +99,9 @@ func (c *Controller) togglePause() {
 }
 
 func (c *Controller) stop() {
+	c.setPause(true)
 	stopStream(c.Streamer)
+	c.Streamer = nil
 }
 
 func (c *Controller) changeSelection(diff int) {
